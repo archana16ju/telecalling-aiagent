@@ -9,7 +9,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public')); // Serve frontend files
 
 // =====================
 // Conversation Memory
@@ -42,11 +41,6 @@ async function sendMessage(message, sessionId = 'default') {
 // =====================
 // Routes
 // =====================
-
-// Root: Serve Chat UI
-app.get('/', (req, res) => {
-    res.sendFile('index.html', { root: './public' });
-});
 
 // POST /call: test AI without phone
 app.post('/call', async (req, res) => {
