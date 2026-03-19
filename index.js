@@ -1,18 +1,7 @@
-// index.js
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import twilio from 'twilio';
 import { sendToAI } from './agent.js'; // your AI function
-
-dotenv.config();
-
-// Twilio setup
-const client = twilio(
-    process.env.TWILIO_ACCOUNT_SID,
-    process.env.TWILIO_AUTH_TOKEN
-);
-const VoiceResponse = twilio.twiml.VoiceResponse;
 
 const app = express();
 
@@ -77,68 +66,7 @@ app.get('/voice', (req, res) => {
     res.send('This is a Twilio Webhook endpoint. It only accepts POST requests from Twilio.');
 });
 
-// Twilio webhook: incoming call
-app.post('/voice', async (req, res) => {
-    const twiml = new VoiceResponse();
-    const callSid = req.body.CallSid;
-
-    try {
-        const reply = await sendMessage(
-            'Hello! Welcome to our AI Telecaller. How can I help you today?',
-            callSid
-        );
-
-        const gather = twiml.gather({
-            input: 'speech',
-            action: '/voice/respond',
-            speechTimeout: 'auto',
-            timeout: 5
-        });
-        gather.say(reply);
-
-        // fallback if no input
-        twiml.redirect('/voice/respond');
-    } catch (err) {
-        console.error('/voice Error:', err.message);
-        twiml.say('Sorry, the AI is currently offline.');
-    }
-
-    res.type('text/xml').send(twiml.toString());
-});
-
-// GET /voice/respond: browser instructions
-app.get('/voice/respond', (req, res) => {
-    res.send('This endpoint is used by Twilio to process speech via POST.');
-});
-
-// Twilio webhook: process customer's speech
-app.post('/voice/respond', async (req, res) => {
-    const twiml = new VoiceResponse();
-    const callSid = req.body.CallSid;
-    const speechResult = req.body.SpeechResult;
-
-    try {
-        if (speechResult) {
-            const reply = await sendMessage(speechResult, callSid);
-
-            const gather = twiml.gather({
-                input: 'speech',
-                action: '/voice/respond',
-                speechTimeout: 'auto',
-                timeout: 5
-            });
-            gather.say(reply);
-        } else {
-            twiml.say('I did not catch that. Please repeat your request.');
-            twiml.redirect('/voice/respond');
-        }
-    } catch (err) {
-        console.error('/voice/respond Error:', err.message);
-        twiml.say('Sorry, there was a technical error. Ending the call.');
-    }
-
-    res.type('text/xml').send(twiml.toString());
-});
+// Start server
 
 // Start server
 const PORT = process.env.PORT || 3000;
