@@ -72,6 +72,11 @@ app.post('/call', async (req, res) => {
     }
 });
 
+// GET /voice: browser instructions
+app.get('/voice', (req, res) => {
+    res.send('This is a Twilio Webhook endpoint. It only accepts POST requests from Twilio.');
+});
+
 // Twilio webhook: incoming call
 app.post('/voice', async (req, res) => {
     const twiml = new VoiceResponse();
@@ -99,6 +104,11 @@ app.post('/voice', async (req, res) => {
     }
 
     res.type('text/xml').send(twiml.toString());
+});
+
+// GET /voice/respond: browser instructions
+app.get('/voice/respond', (req, res) => {
+    res.send('This endpoint is used by Twilio to process speech via POST.');
 });
 
 // Twilio webhook: process customer's speech
