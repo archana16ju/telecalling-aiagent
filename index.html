@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order with Me | AI Assistant</title>
+    <title>OrderMate | AI Assistant</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -69,8 +70,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .user-message {
@@ -128,17 +136,25 @@
             opacity: 0.9;
         }
 
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 10px;
+        }
     </style>
 </head>
+
 <body>
     <div class="chat-container">
         <div class="chat-header">
             <h1>Order with Me</h1>
         </div>
         <div class="messages" id="messages">
-            <div class="message ai-message">Welcome! I'm your "Order with Me" assistant. What can I get for you today?</div>
+            <div class="message ai-message">Welcome! I'm your "Order with Me" assistant. What can I get for you today?
+            </div>
         </div>
         <form class="input-area" id="chat-form">
             <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off">
@@ -182,4 +198,5 @@
         }
     </script>
 </body>
+
 </html>
