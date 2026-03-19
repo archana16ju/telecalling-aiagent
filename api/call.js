@@ -1,16 +1,37 @@
+// api/call.js
 export default async function handler(req, res) {
-    if (req.method === 'POST') {
-        const { message } = req.body;
+    if (req.method !== "POST") {
+        return res.status(405).json({ message: "Method not allowed" });
+    }
 
-        if (!message) {
-            return res.status(400).json({ error: "Message is required" });
+    try {
+        // Parse JSON manually if needed
+        let body = req.body;
+
+        // Vercel sometimes sends string if Content-Type not handled
+        if (typeof body === "string") {
+            body = JSON.parse(body);
         }
 
-        // Replace this with your AI logic
-        const reply = `You said: ${message}`;
+        const { message } = body;
 
-        return res.status(200).json({ reply });
-    } else {
-        res.status(405).json({ error: "Method not allowed. Use POST." });
+        if (!message) {
+            return res.status(400).json({ error: "No message provided" });
+        }
+
+        // Simple AI simulation
+        let aiReply = "I am sorry, could you repeat that?";
+
+        if (message.toLowerCase().includes("pizza")) {
+            aiReply = "Great! What size pizza would you like?";
+        } else if (message.toLowerCase().includes("order")) {
+            aiReply = "Sure, I can help you with your order. What would you like?";
+        }
+
+        res.status(200).json({ reply: aiReply });
+
+    } catch (err) {
+        console.error("Error:", err);
+        res.status(500).json({ error: "Internal server error" });
     }
 }

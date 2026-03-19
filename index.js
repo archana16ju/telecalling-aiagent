@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import twilio from 'twilio';
+import fetch from 'node-fetch'; // Required if using Node.js <18
 import { sendToAI } from './agent.js';
 
 dotenv.config();
@@ -21,7 +22,42 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Required for Twilio
 
-// Root route
+// =====================
+// Conversation Memory
+// =====================
+const conversationMemory = {};
+
+// Helper to send message with memory
+async function sendMessage(message, sessionId = 'default') {
+    if (!message) return;
+
+    if (!conversationMemory[sessionId]) {
+        conversationMemory[sessionId] = [];
+    }
+
+    // Add user message
+    conversationMemory[sessionId].push({ role: 'user', text: message });
+    console.log(`You (${sessionId}): ${message}`);
+
+    try {
+        // Call AI (your own endpoint or external AI)
+        const reply = await sendToAI(message, sessionId);
+
+        conversationMemory[sessionId].push({ role: 'agent', text: reply });
+        console.log(`Agent (${sessionId}): ${reply}`);
+
+        return reply;
+    } catch (err) {
+        console.error('Error communicating with AI:', err.message);
+        return 'Error communicating with AI.';
+    }
+}
+
+// =====================
+// Routes
+// =====================
+
+// Root
 app.get('/', (req, res) => {
     res.send('Telecaller AI server is running ✅');
 });
@@ -34,15 +70,14 @@ app.get('/call', (req, res) => {
 // POST /call: test AI without phone
 app.post('/call', async (req, res) => {
     try {
-        const { message } = req.body;
+        const { message, sessionId } = req.body;
 
         if (!message) {
             return res.status(400).json({ error: 'Message is required' });
         }
 
-        const reply = await sendToAI(message);
+        const reply = await sendMessage(message, sessionId || 'default');
         res.json({ reply });
-
     } catch (error) {
         console.error('Error in /call:', error.message);
         res.status(500).json({ error: 'AI request failed' });
@@ -55,7 +90,7 @@ app.post('/voice', async (req, res) => {
     const callSid = req.body.CallSid;
 
     try {
-        const reply = await sendToAI(
+        const reply = await sendMessage(
             "The customer has connected. Greet them and ask what they would like to order.",
             callSid
         );
@@ -70,7 +105,6 @@ app.post('/voice', async (req, res) => {
 
         // Fallback if no speech detected
         twiml.say('We didn\'t hear anything. Please call back when you are ready.');
-
     } catch (error) {
         console.error('Error in /voice:', error);
         twiml.say('Sorry, our restaurant AI is offline.');
@@ -88,7 +122,7 @@ app.post('/voice/respond', async (req, res) => {
 
     try {
         if (speechResult) {
-            const reply = await sendToAI(speechResult, callSid);
+            const reply = await sendMessage(speechResult, callSid);
 
             const gather = twiml.gather({
                 input: 'speech',
@@ -101,7 +135,6 @@ app.post('/voice/respond', async (req, res) => {
             twiml.say('I didn\'t catch that. Could you please repeat your order?');
             twiml.redirect('/voice/respond');
         }
-
     } catch (error) {
         console.error('Error in /voice/respond:', error);
         twiml.say('Sorry, we encountered a technical issue. Ending call.');
@@ -112,6 +145,7 @@ app.post('/voice/respond', async (req, res) => {
 });
 
 // Start server
-app.listen(3000, () => {
-    console.log('Server running on http://localhost:3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
 });
