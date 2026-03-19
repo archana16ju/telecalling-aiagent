@@ -8,7 +8,8 @@ const app = express();
 // Middlewares
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // Required for Twilio
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public')); // Serve frontend files
 
 // =====================
 // Conversation Memory
@@ -42,9 +43,9 @@ async function sendMessage(message, sessionId = 'default') {
 // Routes
 // =====================
 
-// Root
+// Root: Serve Chat UI
 app.get('/', (req, res) => {
-    res.send('Telecaller AI server is running ✅');
+    res.sendFile('index.html', { root: './public' });
 });
 
 // POST /call: test AI without phone
