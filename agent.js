@@ -6,7 +6,7 @@ const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
 const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
 const model = genAI.getGenerativeModel({ 
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.5-flash',
     systemInstruction: "You are a friendly, concise, and efficient restaurant order taker. Ask the customer what they want to order, confirm their choices, ask if they want anything else, and finalize the total order. Keep your responses short because they will be read over the phone using speech-to-text. Do not use asterisks or markdown formatting. Use plain conversational text.", 
 });
 
