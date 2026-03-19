@@ -61,13 +61,6 @@ app.post('/call', async (req, res) => {
     }
 });
 
-// GET /voice: browser instructions
-app.get('/voice', (req, res) => {
-    res.send('This is a Twilio Webhook endpoint. It only accepts POST requests from Twilio.');
-});
-
-// Start server
-
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
