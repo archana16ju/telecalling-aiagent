@@ -24,8 +24,6 @@ export default async function handler(req, res) {
         res.status(200).json({ reply: aiReply });
 
     } catch (err) {
-
-    } catch (err) {
         console.error("Error:", err);
         res.status(500).json({ error: "Internal server error" });
     }
