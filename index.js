@@ -3,8 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import twilio from 'twilio';
-import fetch from 'node-fetch'; // Required if using Node.js <18
-import { sendToAI } from './agent.js';
+import { sendToAI } from './agent.js'; // your AI function
 
 dotenv.config();
 
@@ -27,9 +26,9 @@ app.use(express.urlencoded({ extended: true })); // Required for Twilio
 // =====================
 const conversationMemory = {};
 
-// Helper to send message with memory
+// Helper: send message to AI with memory
 async function sendMessage(message, sessionId = 'default') {
-    if (!message) return;
+    if (!message) return 'No message received.';
 
     if (!conversationMemory[sessionId]) {
         conversationMemory[sessionId] = [];
@@ -37,19 +36,16 @@ async function sendMessage(message, sessionId = 'default') {
 
     // Add user message
     conversationMemory[sessionId].push({ role: 'user', text: message });
-    console.log(`You (${sessionId}): ${message}`);
+    console.log(`User (${sessionId}): ${message}`);
 
     try {
-        // Call AI (your own endpoint or external AI)
         const reply = await sendToAI(message, sessionId);
-
         conversationMemory[sessionId].push({ role: 'agent', text: reply });
         console.log(`Agent (${sessionId}): ${reply}`);
-
         return reply;
     } catch (err) {
-        console.error('Error communicating with AI:', err.message);
-        return 'Error communicating with AI.';
+        console.error('AI Error:', err.message);
+        return 'Sorry, AI is unavailable right now.';
     }
 }
 
@@ -62,24 +58,16 @@ app.get('/', (req, res) => {
     res.send('Telecaller AI server is running ✅');
 });
 
-// GET /call for browser testing
-app.get('/call', (req, res) => {
-    res.send('Use POST method to interact with AI');
-});
-
 // POST /call: test AI without phone
 app.post('/call', async (req, res) => {
     try {
         const { message, sessionId } = req.body;
-
-        if (!message) {
-            return res.status(400).json({ error: 'Message is required' });
-        }
+        if (!message) return res.status(400).json({ error: 'Message is required' });
 
         const reply = await sendMessage(message, sessionId || 'default');
         res.json({ reply });
-    } catch (error) {
-        console.error('Error in /call:', error.message);
+    } catch (err) {
+        console.error('/call Error:', err.message);
         res.status(500).json({ error: 'AI request failed' });
     }
 });
@@ -91,7 +79,7 @@ app.post('/voice', async (req, res) => {
 
     try {
         const reply = await sendMessage(
-            "The customer has connected. Greet them and ask what they would like to order.",
+            'Hello! Welcome to our AI Telecaller. How can I help you today?',
             callSid
         );
 
@@ -103,15 +91,14 @@ app.post('/voice', async (req, res) => {
         });
         gather.say(reply);
 
-        // Fallback if no speech detected
-        twiml.say('We didn\'t hear anything. Please call back when you are ready.');
-    } catch (error) {
-        console.error('Error in /voice:', error);
-        twiml.say('Sorry, our restaurant AI is offline.');
+        // fallback if no input
+        twiml.redirect('/voice/respond');
+    } catch (err) {
+        console.error('/voice Error:', err.message);
+        twiml.say('Sorry, the AI is currently offline.');
     }
 
-    res.type('text/xml');
-    res.send(twiml.toString());
+    res.type('text/xml').send(twiml.toString());
 });
 
 // Twilio webhook: process customer's speech
@@ -132,16 +119,15 @@ app.post('/voice/respond', async (req, res) => {
             });
             gather.say(reply);
         } else {
-            twiml.say('I didn\'t catch that. Could you please repeat your order?');
+            twiml.say('I did not catch that. Please repeat your request.');
             twiml.redirect('/voice/respond');
         }
-    } catch (error) {
-        console.error('Error in /voice/respond:', error);
-        twiml.say('Sorry, we encountered a technical issue. Ending call.');
+    } catch (err) {
+        console.error('/voice/respond Error:', err.message);
+        twiml.say('Sorry, there was a technical error. Ending the call.');
     }
 
-    res.type('text/xml');
-    res.send(twiml.toString());
+    res.type('text/xml').send(twiml.toString());
 });
 
 // Start server
