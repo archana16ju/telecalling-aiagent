@@ -6,7 +6,7 @@
       "destination": "/api/call.js"
     },
     {
-      "source": "/call",
+      "source": "/(.*)",
       "destination": "/index.js"
     }
   ]

@@ -1,7 +1,9 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
 import { sendToAI } from './agent.js'; // your AI function
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -41,6 +43,11 @@ async function sendMessage(message, sessionId = 'default') {
 // =====================
 // Routes
 // =====================
+
+// Root: Serve Chat UI
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // POST /call: test AI without phone
 app.post('/call', async (req, res) => {
